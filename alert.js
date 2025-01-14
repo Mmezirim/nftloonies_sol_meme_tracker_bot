@@ -82,8 +82,11 @@ async function handleNewTransaction(transactionSignature) {
   }
 }
 
+bot.launch()
+
 // Telegram bot commands
 bot.start((ctx) => {
+    console.log(ctx.from)
     ctx.reply("Welcome to the Meme Coin Tracker Bot! 🚀\nI'll notify you about new meme coins launched on the Solana blockchain.");
 });  
 
