@@ -1,0 +1,31 @@
+{
+  "name": "tg-bot",
+  "version": "1.0.0",
+  "description": "solana meme alert bot",
+  "main": "alert.js",
+  "scripts": {
+    "test": "nodemon bot"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Mmezirim/nftloonies_sol_meme_tracker_bot.git"
+  },
+  "keywords": [
+    "bot",
+    "solana",
+    "meme"
+  ],
+  "author": "Chimmezirim",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Mmezirim/nftloonies_sol_meme_tracker_bot/issues"
+  },
+  "homepage": "https://github.com/Mmezirim/nftloonies_sol_meme_tracker_bot#readme",
+  "dependencies": {
+    "@solana/web3.js": "^1.98.0",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "nodemon": "^3.1.9",
+    "telegraf": "^4.16.3"
+  }
+}
