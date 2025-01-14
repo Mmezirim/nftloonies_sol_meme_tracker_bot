@@ -3,10 +3,8 @@ const { Connection, PublicKey, clusterApiUrl } = require("@solana/web3.js");
 const { Telegraf } = require("telegraf");
 const { config } = require("dotenv");
 
-// Load environment variables
 config();
 
-// Constants
 const PORT = 3000;
 const RPC_URL = clusterApiUrl("mainnet-beta");
 const TELEGRAM_WEBHOOK_URL = process.env.WEBHOOK_URL;
@@ -15,8 +13,6 @@ const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
 // Initialize Telegram bot
 const bot = new Telegraf(TELEGRAM_BOT_TOKEN);
-
-// Initialize Express
 const app = express();
 
 // Connect to Solana blockchain
@@ -34,9 +30,9 @@ async function sendTelegramNotification(message) {
   }
 }
 
-// Fetch token stats (mock implementation - replace with a real API or logic)
-async function getTokenStats(tokenAddress) {
-  // Replace this logic with real token stats fetching
+// Fetch token stats
+async function getTokenStats(KjgM54canV5w51yHPfWNASscWJp4Frzncfqeqoapump) {
+  // Replacing with token stats after testing
   return {
     name: "Example Token",
     ticker: "EXM",
