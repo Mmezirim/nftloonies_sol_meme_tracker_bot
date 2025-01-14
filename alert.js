@@ -31,7 +31,7 @@ async function sendTelegramNotification(message) {
 }
 
 // Fetch token stats
-async function getTokenStats(KjgM54canV5w51yHPfWNASscWJp4Frzncfqeqoapump) {
+async function getTokenStats(tokenMintAddress) {
   // Replacing with token stats after testing
   return {
     name: "Example Token",
@@ -84,8 +84,8 @@ async function handleNewTransaction(transactionSignature) {
 
 // Telegram bot commands
 bot.start((ctx) => {
-  ctx.reply("Welcome to the Meme Coin Tracker Bot! 🚀\nI'll notify you about new meme coins launched on the Solana blockchain.");
-});
+    ctx.reply("Welcome to the Meme Coin Tracker Bot! 🚀\nI'll notify you about new meme coins launched on the Solana blockchain.");
+});  
 
 bot.command("status", (ctx) => {
   ctx.reply("Bot is active! ✅\nConnected to the Solana blockchain and monitoring for meme coins.");
@@ -96,7 +96,7 @@ bot.command("help", (ctx) => {
 });
 
 // Webhook endpoint for Telegram updates
-app.use(bot.webhookCallback(`/bot${TELEGRAM_BOT_TOKEN}`));
+app.use("/webhook", bot.webhookCallback("/webhook"));
 
 // Endpoint for Solana webhook integration (replace polling)
 app.post("/webhook/solana", express.json(), async (req, res) => {
@@ -117,6 +117,10 @@ app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
 
   // Set Telegram webhook URL
-  await bot.telegram.setWebhook(`${TELEGRAM_WEBHOOK_URL}/bot${TELEGRAM_BOT_TOKEN}`);
-  console.log("Telegram webhook set successfully!");
+  try {
+    await bot.telegram.setWebhook(`${TELEGRAM_WEBHOOK_URL}/webhook`);
+    console.log("Telegram webhook set successfully!");
+  } catch (error) {
+    console.error("Error setting webhook:", error);
+  }
 });
