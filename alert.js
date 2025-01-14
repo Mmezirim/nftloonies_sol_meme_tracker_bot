@@ -85,18 +85,20 @@ async function handleNewTransaction(transactionSignature) {
 bot.launch()
 
 // Telegram bot commands
+// Telegram bot commands
 bot.start((ctx) => {
-    console.log(ctx.from)
-    ctx.reply("Welcome to the Meme Coin Tracker Bot! 🚀\nI'll notify you about new meme coins launched on the Solana blockchain.");
+    console.log(ctx.from);
+    bot.telegram.sendMessage(ctx.chat.id, "Welcome to the Meme Coin Tracker Bot! 🚀\nI'll notify you about new meme coins launched on the Solana blockchain.", { parse_mode: "Markdown" });
 });  
 
 bot.command("status", (ctx) => {
-  ctx.reply("Bot is active! ✅\nConnected to the Solana blockchain and monitoring for meme coins.");
+  bot.telegram.sendMessage(ctx.chat.id, "Bot is active! ✅\nConnected to the Solana blockchain and monitoring for meme coins.", { parse_mode: "Markdown" });
 });
 
 bot.command("help", (ctx) => {
-  ctx.reply("Available commands:\n/start - Start the bot\n/status - Check bot status\n/help - Get help.");
+  bot.telegram.sendMessage(ctx.chat.id, "Available commands:\n/start - Start the bot\n/status - Check bot status\n/help - Get help.", { parse_mode: "Markdown" });
 });
+
 
 // Webhook endpoint for Telegram updates
 app.get('/', (req, res) => {
