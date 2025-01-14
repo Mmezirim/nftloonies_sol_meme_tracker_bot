@@ -5,7 +5,7 @@ const { config } = require("dotenv");
 
 config();
 
-const PORT = 3000;
+const PORT = process.env.PORT || 8080;
 const RPC_URL = clusterApiUrl("mainnet-beta");
 const TELEGRAM_WEBHOOK_URL = process.env.WEBHOOK_URL;
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
@@ -96,6 +96,12 @@ bot.command("help", (ctx) => {
 });
 
 // Webhook endpoint for Telegram updates
+app.get('/', (req, res) => {
+    res.send("bot works")
+    console.log('bot is up');
+    
+})
+
 app.use("/webhook", bot.webhookCallback("/webhook"));
 
 // Endpoint for Solana webhook integration (replace polling)
