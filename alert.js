@@ -88,27 +88,27 @@ function setupWebSocket() {
   });
 }
 
+// Start the WebSocket connection in parallel
+setupWebSocket();
+
 // Telegram bot commands
 bot.start((ctx) => {
   console.log(ctx.from);
-  bot.telegram.sendMessage(
-    ctx.chat.id,
+  ctx.reply(
     "Welcome to the Meme Coin Tracker Bot! 🚀\nI'll notify you about new meme coins launched on PumpPortal.",
     { parse_mode: "Markdown" }
   );
 });
 
 bot.command("status", (ctx) => {
-  bot.telegram.sendMessage(
-    ctx.chat.id,
+  ctx.reply(
     "Bot is active! ✅\nMonitoring real-time new token events from PumpPortal.",
     { parse_mode: "Markdown" }
   );
 });
 
 bot.command("help", (ctx) => {
-  bot.telegram.sendMessage(
-    ctx.chat.id,
+  ctx.reply(
     "Available commands:\n/start - Start the bot\n/status - Check bot status\n/help - Get help.",
     { parse_mode: "Markdown" }
   );
@@ -122,10 +122,9 @@ app.get("/", (req, res) => {
 
 app.use("/webhook", bot.webhookCallback("/webhook"));
 
-// Start the WebSocket connection and Express server
+// Start the Express server
 app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
-  setupWebSocket();
 
   // Set Telegram webhook URL
   try {
@@ -134,4 +133,9 @@ app.listen(PORT, async () => {
   } catch (error) {
     console.error("Error setting webhook:", error);
   }
+});
+
+// Enable polling for Telegram bot commands
+bot.launch().then(() => {
+  console.log("Telegram bot is polling for commands.");
 });
