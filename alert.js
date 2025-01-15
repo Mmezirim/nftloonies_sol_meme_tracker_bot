@@ -6,6 +6,7 @@ const { config } = require("dotenv");
 config();
 
 const PORT = process.env.PORT || 8080;
+const TELEGRAM_WEBHOOK_URL = process.env.WEBHOOK_URL;
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 const WEBSOCKET_URL = "wss://pumpportal.fun/api/data";
@@ -50,7 +51,7 @@ function setupWebSocket() {
         const token = event.data;
         const { name, symbol, marketCap, volume, liquidity, ath, atl, address } = token;
 
-        const message = `🎉 *New Meme Coin Detected on Pump.fun!*\n\n` +
+        const message = `🎉 *New Meme Coin Detected on PumpPortal!*\n\n` +
           `🪙 *Name*: ${name}\n` +
           `💠 *Ticker*: ${symbol}\n` +
           `💵 *Market Cap*: $${marketCap}\n` +
@@ -59,7 +60,7 @@ function setupWebSocket() {
           `🏔️ *All-Time High*: $${ath}\n` +
           `🏔️ *All-Time Low*: $${atl}\n\n` +
           `🔗 *Contract Address*: \`${address}\`\n` +
-          `📜 [View on Pump.fun](https://pump.fun/token/${address})\n` +
+          `📜 [View on PumpPortal](https://pumpportal.fun/token/${address})\n` +
           `📥 Don't miss out!`;
 
         // Send Telegram notification
@@ -85,7 +86,7 @@ bot.start((ctx) => {
   console.log(ctx.from);
   bot.telegram.sendMessage(
     ctx.chat.id,
-    "Welcome to the Meme Coin Tracker Bot! 🚀\nI'll notify you about new meme coins launched on Pump.fun.",
+    "Welcome to the Meme Coin Tracker Bot! 🚀\nI'll notify you about new meme coins launched on PumpPortal.",
     { parse_mode: "Markdown" }
   );
 });
@@ -93,7 +94,7 @@ bot.start((ctx) => {
 bot.command("status", (ctx) => {
   bot.telegram.sendMessage(
     ctx.chat.id,
-    "Bot is active! ✅\nMonitoring real-time new token events from Pump.fun.",
+    "Bot is active! ✅\nMonitoring real-time new token events from PumpPortal.",
     { parse_mode: "Markdown" }
   );
 });
@@ -108,12 +109,22 @@ bot.command("help", (ctx) => {
 
 // Webhook endpoint for Telegram updates
 app.get("/", (req, res) => {
-  res.send("Bot is up and running");
-  console.log("Bot is up and running");
+  res.send("Bot is running");
+  console.log("Health check: Bot is up");
 });
 
-// Start WebSocket and Express server
+app.use("/webhook", bot.webhookCallback("/webhook"));
+
+// Start the WebSocket connection and Express server
 app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
   setupWebSocket();
+
+  // Set Telegram webhook URL
+  try {
+    await bot.telegram.setWebhook(`${TELEGRAM_WEBHOOK_URL}/webhook`);
+    console.log("Telegram webhook set successfully!");
+  } catch (error) {
+    console.error("Error setting webhook:", error);
+  }
 });
