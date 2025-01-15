@@ -1,16 +1,14 @@
 const express = require("express");
-const axios = require("axios"); // To make API requests
+const WebSocket = require("ws");
 const { Telegraf } = require("telegraf");
 const { config } = require("dotenv");
 
 config();
 
 const PORT = process.env.PORT || 8080;
-const TELEGRAM_WEBHOOK_URL = process.env.WEBHOOK_URL;
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
-const SOLSCAN_API_KEY = process.env.SOLSCAN_API_KEY;
-const SOLSCAN_API_URL = "https://api.solscan.io/transaction/latest";
+const WEBSOCKET_URL = "wss://pumpportal.fun/api/data";
 
 // Initialize Telegram bot
 const bot = new Telegraf(TELEGRAM_BOT_TOKEN);
@@ -28,98 +26,94 @@ async function sendTelegramNotification(message) {
   }
 }
 
-// Function to fetch token stats
-async function getTokenStats(tokenMintAddress) {
-  try {
-    const response = await axios.get(`https://api.solscan.io/token/meta?tokenAddress=${tokenMintAddress}`, {
-      headers: { token: SOLSCAN_API_KEY },
-    });
-    const data = response.data?.data;
+// Setup WebSocket connection
+function setupWebSocket() {
+  const ws = new WebSocket(WEBSOCKET_URL);
 
-    if (data) {
-      return {
-        name: data.name || "Unknown Token",
-        ticker: data.symbol || "N/A",
-        supply: data.supply || "N/A",
-        price: `$${data.priceUsd?.toFixed(2) || "N/A"}`,
-        holders: data.holders || "N/A",
-      };
-    }
-    return null;
-  } catch (error) {
-    console.error("Error fetching token stats:", error);
-    return null;
-  }
-}
+  ws.on("open", () => {
+    console.log("WebSocket connection established!");
 
-// Function to monitor for new transactions
-async function monitorNewTransactions() {
-  try {
-    const response = await axios.get(SOLSCAN_API_URL, {
-      headers: { token: SOLSCAN_API_KEY },
-    });
+    // Subscribe to new token creation events
+    const payload = {
+      method: "subscribeNewToken",
+    };
+    ws.send(JSON.stringify(payload));
+    console.log("Subscribed to new token creation events.");
+  });
 
-    const transactions = response.data?.data || [];
-    for (const tx of transactions) {
-      if (tx?.logMessage?.some((log) => log.includes("InitializeMint"))) {
-        console.log(`New token detected in transaction: ${tx.txHash}`);
+  ws.on("message", async (data) => {
+    try {
+      const event = JSON.parse(data);
 
-        const tokenMintAddress = tx.tokenAddress; // Adjust based on API response
-        const stats = await getTokenStats(tokenMintAddress);
+      // Check for new token events
+      if (event.method === "newToken" && event.data) {
+        const token = event.data;
+        const { name, symbol, marketCap, volume, liquidity, ath, atl, address } = token;
 
-        if (stats) {
-          const message = `🎉 *New Meme Coin Detected!*\n\n` +
-            `🪙 *Name*: ${stats.name}\n` +
-            `💠 *Ticker*: ${stats.ticker}\n` +
-            `💵 *Price*: ${stats.price}\n` +
-            `📦 *Supply*: ${stats.supply}\n` +
-            `👥 *Holders*: ${stats.holders}\n\n` +
-            `🔗 *Contract Address*: \`${tokenMintAddress}\`\n` +
-            `📜 [View Transaction](https://solscan.io/tx/${tx.txHash})\n`;
+        const message = `🎉 *New Meme Coin Detected on Pump.fun!*\n\n` +
+          `🪙 *Name*: ${name}\n` +
+          `💠 *Ticker*: ${symbol}\n` +
+          `💵 *Market Cap*: $${marketCap}\n` +
+          `📊 *Volume*: $${volume}\n` +
+          `💧 *Liquidity*: $${liquidity}\n` +
+          `🏔️ *All-Time High*: $${ath}\n` +
+          `🏔️ *All-Time Low*: $${atl}\n\n` +
+          `🔗 *Contract Address*: \`${address}\`\n` +
+          `📜 [View on Pump.fun](https://pump.fun/token/${address})\n` +
+          `📥 Don't miss out!`;
 
-          await sendTelegramNotification(message);
-        }
+        // Send Telegram notification
+        await sendTelegramNotification(message);
       }
+    } catch (error) {
+      console.error("Error processing WebSocket message:", error);
     }
-  } catch (error) {
-    console.error("Error monitoring transactions:", error);
-  }
+  });
+
+  ws.on("close", () => {
+    console.error("WebSocket connection closed. Reconnecting in 5 seconds...");
+    setTimeout(setupWebSocket, 5000); // Reconnect after 5 seconds
+  });
+
+  ws.on("error", (error) => {
+    console.error("WebSocket error:", error);
+  });
 }
 
 // Telegram bot commands
 bot.start((ctx) => {
   console.log(ctx.from);
-  bot.telegram.sendMessage(ctx.chat.id, "Welcome to the Meme Coin Tracker Bot! 🚀\nI'll notify you about new meme coins launched on the Solana blockchain.", { parse_mode: "Markdown" });
+  bot.telegram.sendMessage(
+    ctx.chat.id,
+    "Welcome to the Meme Coin Tracker Bot! 🚀\nI'll notify you about new meme coins launched on Pump.fun.",
+    { parse_mode: "Markdown" }
+  );
 });
 
 bot.command("status", (ctx) => {
-  bot.telegram.sendMessage(ctx.chat.id, "Bot is active! ✅\nConnected to the Solana blockchain and monitoring for meme coins.", { parse_mode: "Markdown" });
+  bot.telegram.sendMessage(
+    ctx.chat.id,
+    "Bot is active! ✅\nMonitoring real-time new token events from Pump.fun.",
+    { parse_mode: "Markdown" }
+  );
 });
 
 bot.command("help", (ctx) => {
-  bot.telegram.sendMessage(ctx.chat.id, "Available commands:\n/start - Start the bot\n/status - Check bot status\n/help - Get help.", { parse_mode: "Markdown" });
+  bot.telegram.sendMessage(
+    ctx.chat.id,
+    "Available commands:\n/start - Start the bot\n/status - Check bot status\n/help - Get help.",
+    { parse_mode: "Markdown" }
+  );
 });
 
 // Webhook endpoint for Telegram updates
-app.get('/', (req, res) => {
-  res.send("Bot is running");
-  console.log("Health check: Bot is up");
+app.get("/", (req, res) => {
+  res.send("Bot is up and running");
+  console.log("Bot is up and running");
 });
 
-app.use("/webhook", bot.webhookCallback("/webhook"));
-
-// Start monitoring transactions periodically
-setInterval(monitorNewTransactions, 60000); // Poll every 60 seconds
-
-// Start the Express server
+// Start WebSocket and Express server
 app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
-
-  // Set Telegram webhook URL
-  try {
-    await bot.telegram.setWebhook(`${TELEGRAM_WEBHOOK_URL}/webhook`);
-    console.log("Telegram webhook set successfully!");
-  } catch (error) {
-    console.error("Error setting webhook:", error);
-  }
+  setupWebSocket();
 });
