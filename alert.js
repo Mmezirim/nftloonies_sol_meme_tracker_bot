@@ -16,6 +16,10 @@ const PUMPPORTAL_WS_URL = "wss://pumpportal.fun/api/data";
 const bot = new Telegraf(TELEGRAM_BOT_TOKEN);
 const app = express();
 
+// Variables to store the most recent listings
+let recentTokenListing = null;
+let recentLiquidityEvent = null;
+
 // Helper function to send Telegram notifications
 async function sendTelegramNotification(message) {
   try {
@@ -41,6 +45,7 @@ function processNewToken(data) {
     `🔗 *Contract Address*: \`${address}\`\n` +
     `📜 [View on PumpPortal](https://pumpportal.fun/token/${address})\n`;
 
+  recentTokenListing = message; // Store the most recent token listing
   sendTelegramNotification(message);
 }
 
@@ -73,6 +78,7 @@ function processRaydiumLiquidity(data) {
     🔒 *Signature:* ${signature || "Unknown"}
   `;
   
+  recentLiquidityEvent = message; // Store the most recent liquidity event
   sendTelegramNotification(message);
 }
 
@@ -129,6 +135,17 @@ bot.command("status", (ctx) => {
 
 bot.command("help", (ctx) => {
   ctx.reply("Available commands:\n/start - Start the bot\n/status - Check bot status\n/help - Get help.", { parse_mode: "Markdown" });
+});
+
+// New `/list` command to show the most recent listing
+bot.command("list", (ctx) => {
+  if (recentTokenListing) {
+    ctx.reply(`*Most Recent Token Listing:*\n\n${recentTokenListing}`, { parse_mode: "Markdown" });
+  } else if (recentLiquidityEvent) {
+    ctx.reply(`*Most Recent Liquidity Event:*\n\n${recentLiquidityEvent}`, { parse_mode: "Markdown" });
+  } else {
+    ctx.reply("No recent events found.", { parse_mode: "Markdown" });
+  }
 });
 
 // Ensure bot is launched
