@@ -48,13 +48,31 @@ function processNewToken(data) {
 function processRaydiumLiquidity(data) {
   console.log("Processing Raydium liquidity event data:", data); // Log event data
 
-  const { token, liquidity, transaction, poolAddress } = data;
-  const message = `🟣 *New Liquidity Added on Raydium!*\n\n` +
-    `🪙 *Token*: ${token.name || "Unknown"} (${token.symbol || "Unknown"})\n` +
-    `💧 *Liquidity*: ${liquidity || "N/A"}\n\n` +
-    `🔗 *Pool Address*: \`${poolAddress}\`\n` +
-    `📜 [View Transaction](https://pumpportal.fun/tx/${transaction})\n`;
+  const { signature, mint, traderPublicKey, txType, initialBuy, solAmount, bondingCurveKey, vTokensInBondingCurve, vSolInBondingCurve, marketCapSol, name, symbol, uri, pool } = data;
+  
+  const message = `
+    *New Liquidity Event:*
 
+    🪙 *Token Name:* ${name || "Unknown"} (${symbol || "Unknown"})
+    💰 *Amount of SOL:* ${solAmount || "N/A"}
+    🛠 *Initial Buy Amount:* ${initialBuy || "N/A"}
+    📊 *Market Cap in SOL:* ${marketCapSol || "N/A"}
+
+    🔗 *Transaction Type:* ${txType || "Unknown"}
+    🧑‍💼 *Trader Public Key:* ${traderPublicKey || "Unknown"}
+
+    🔑 *Mint Address:* ${mint || "Unknown"}
+    🌐 *URI:* [Token Metadata](${uri || "#"})
+
+    📊 *Liquidity in Bonding Curve:*
+    - Tokens: ${vTokensInBondingCurve || "N/A"}
+    - SOL: ${vSolInBondingCurve || "N/A"}
+
+    🏊‍♂️ *Pool:* ${pool || "Unknown"}
+
+    🔒 *Signature:* ${signature || "Unknown"}
+  `;
+  
   sendTelegramNotification(message);
 }
 
