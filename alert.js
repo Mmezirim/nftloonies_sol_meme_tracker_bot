@@ -19,6 +19,7 @@ const app = express();
 // Helper function to send Telegram notifications
 async function sendTelegramNotification(message) {
   try {
+    console.log("Sending Telegram message:", message); // Added log for message content
     await bot.telegram.sendMessage(TELEGRAM_CHAT_ID, message, {
       parse_mode: "Markdown",
     });
@@ -45,6 +46,8 @@ function processNewToken(data) {
 
 // Process new Raydium liquidity events
 function processRaydiumLiquidity(data) {
+  console.log("Processing Raydium liquidity event data:", data); // Log event data
+
   const { token, liquidity, transaction, poolAddress } = data;
   const message = `🟣 *New Liquidity Added on Raydium!*\n\n` +
     `🪙 *Token*: ${token.name || "Unknown"} (${token.symbol || "Unknown"})\n` +
@@ -73,6 +76,8 @@ function startWebSocketConnection() {
 
   ws.on("message", (data) => {
     const event = JSON.parse(data);
+    console.log("Received WebSocket event:", event); // Log received event data
+
     if (event.method === "newToken" && event.data) {
       processNewToken(event.data);
     } else if (event.method === "raydiumLiquidity" && event.data) {
