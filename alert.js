@@ -24,7 +24,7 @@ async function sendTelegramNotification(message) {
     });
     console.log("Notification sent to Telegram:", message);
   } catch (error) {
-    console.error("Error sending Telegram notification:", error);
+    console.error("Error sending Telegram notification:", error.response?.data || error.message);
   }
 }
 
@@ -38,8 +38,7 @@ function processNewToken(data) {
     `📊 *Volume*: ${volume || "N/A"}\n` +
     `💧 *Liquidity*: ${liquidity || "N/A"}\n\n` +
     `🔗 *Contract Address*: \`${address}\`\n` +
-    `📜 [View on PumpPortal](https://pumpportal.fun/token/${address})\n` +
-    `📥 Copy and purchase now!`;
+    `📜 [View on PumpPortal](https://pumpportal.fun/token/${address})\n`;
 
   sendTelegramNotification(message);
 }
@@ -109,20 +108,19 @@ bot.command("help", (ctx) => {
   ctx.reply("Available commands:\n/start - Start the bot\n/status - Check bot status\n/help - Get help.", { parse_mode: "Markdown" });
 });
 
+// Ensure bot is launched
+bot.launch().then(() => {
+  console.log("Telegram bot launched and ready!");
+}).catch((error) => {
+  console.error("Error launching Telegram bot:", error);
+});
+
 // Webhook endpoint for Telegram updates
 app.get("/", (req, res) => {
   res.send("Bot is running");
   console.log("Health check: Bot is up");
 });
 
-app.listen(PORT, async () => {
+app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-
-  // Set Telegram webhook URL
-  try {
-    await bot.telegram.setWebhook(`${TELEGRAM_WEBHOOK_URL}/webhook`);
-    console.log("Telegram webhook set successfully!");
-  } catch (error) {
-    console.error("Error setting webhook:", error);
-  }
 });
