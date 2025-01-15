@@ -112,16 +112,19 @@ function startWebSocketConnection() {
 
   ws.on("message", (data) => {
     const event = JSON.parse(data);
-    console.log("Received WebSocket event:", event);
-
+    console.log("Received WebSocket event:", event); // Log the entire event
+  
+    // Check method and log it
     if (event.method === "newToken" && event.data) {
+      console.log("Processing new token data:", event.data); // Log the data being processed
       processNewToken(event.data); // Process the new token creation event
     } else if (event.method === "raydiumLiquidity" && event.data) {
+      console.log("Processing Raydium liquidity data:", event.data); // Log the data being processed
       processRaydiumLiquidity(event.data); // Process liquidity events
     } else {
-      console.log("Unhandled WebSocket event:", event); // Handle unhandled events
+      console.log("Unhandled WebSocket event:", event); // Log any unhandled event
     }
-  });
+  });  
 
   ws.on("close", () => {
     console.error("WebSocket connection closed. Reconnecting in 5 seconds...");
