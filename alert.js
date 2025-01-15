@@ -33,21 +33,6 @@ async function sendTelegramNotification(message) {
   }
 }
 
-// Process new token listings
-function processNewToken(data) {
-  const { name, ticker, marketCap, volume, liquidity, address } = data;
-  const message = `🎉 *New Meme Coin Detected on PumpPortal!*\n\n` +
-    `🪙 *Name*: ${name || "Unknown"}\n` +
-    `💠 *Ticker*: ${ticker || "Unknown"}\n` +
-    `💵 *Market Cap*: ${marketCap || "N/A"}\n` +
-    `📊 *Volume*: ${volume || "N/A"}\n` +
-    `💧 *Liquidity*: ${liquidity || "N/A"}\n\n` +
-    `🔗 *Contract Address*: \`${address}\`\n` +
-    `📜 [View on PumpPortal](https://pumpportal.fun/token/${address})\n`;
-
-  recentTokenListing = message; // Store the most recent token listing
-  sendTelegramNotification(message);
-}
 
 // Process new Raydium liquidity events
 function processRaydiumLiquidity(data) {
@@ -82,6 +67,33 @@ function processRaydiumLiquidity(data) {
   sendTelegramNotification(message);
 }
 
+// Process new token listings from WebSocket event
+function processNewToken(data) {
+  const {
+    name,
+    symbol,
+    marketCapSol,
+    solAmount,
+    initialBuy,
+    uri,
+    signature,
+    mint,
+  } = data;
+
+  const message = `🎉 *New Token Created on PumpPortal!*\n\n` +
+    `🪙 *Name*: ${name || "Unknown"}\n` +
+    `💠 *Symbol*: ${symbol || "Unknown"}\n` +
+    `💵 *Market Cap (in SOL)*: ${marketCapSol || "N/A"}\n` +
+    `💰 *Initial Buy Amount*: ${initialBuy || "N/A"} SOL\n` +
+    `🔗 *Token Mint*: [${mint}](https://solscan.io/address/${mint})\n` +
+    `📜 *Transaction Signature*: [${signature}](https://solscan.io/tx/${signature})\n` +
+    `🌐 *Token URI*: [View Metadata](${uri})\n`;
+
+  // Save the most recent token listing
+  recentTokenListing = message;
+  sendTelegramNotification(message);
+}
+
 // WebSocket connection and subscriptions
 function startWebSocketConnection() {
   const ws = new WebSocket(PUMPPORTAL_WS_URL);
@@ -100,14 +112,14 @@ function startWebSocketConnection() {
 
   ws.on("message", (data) => {
     const event = JSON.parse(data);
-    console.log("Received WebSocket event:", event); // Log received event data
+    console.log("Received WebSocket event:", event);
 
     if (event.method === "newToken" && event.data) {
-      processNewToken(event.data);
+      processNewToken(event.data); // Process the new token creation event
     } else if (event.method === "raydiumLiquidity" && event.data) {
-      processRaydiumLiquidity(event.data);
+      processRaydiumLiquidity(event.data); // Process liquidity events
     } else {
-      console.log("Unhandled WebSocket event:", event);
+      console.log("Unhandled WebSocket event:", event); // Handle unhandled events
     }
   });
 
@@ -124,21 +136,10 @@ function startWebSocketConnection() {
 // Start WebSocket connection
 startWebSocketConnection();
 
-// Telegram bot commands
-bot.start((ctx) => {
-  ctx.reply("Welcome to the Meme Coin & Raydium Tracker Bot! 🚀\nI'll notify you about new meme coins and Raydium liquidity events.", { parse_mode: "Markdown" });
-});
-
-bot.command("status", (ctx) => {
-  ctx.reply("Bot is active! ✅\nMonitoring PumpPortal for new token listings and Raydium liquidity events.", { parse_mode: "Markdown" });
-});
-
-bot.command("help", (ctx) => {
-  ctx.reply("Available commands:\n/start - Start the bot\n/status - Check bot status\n/help - Get help.", { parse_mode: "Markdown" });
-});
-
-// New `/list` command to show the most recent listing
+// Handle /list command to show most recent token or liquidity event
 bot.command("list", (ctx) => {
+  console.log("List command triggered!");
+
   if (recentTokenListing) {
     ctx.reply(`*Most Recent Token Listing:*\n\n${recentTokenListing}`, { parse_mode: "Markdown" });
   } else if (recentLiquidityEvent) {
@@ -147,6 +148,7 @@ bot.command("list", (ctx) => {
     ctx.reply("No recent events found.", { parse_mode: "Markdown" });
   }
 });
+
 
 // Ensure bot is launched
 bot.launch().then(() => {
