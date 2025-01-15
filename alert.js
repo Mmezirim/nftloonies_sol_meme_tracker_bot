@@ -27,6 +27,29 @@ async function sendTelegramNotification(message) {
   }
 }
 
+// Function to process and send token listing information
+async function processNewToken(data) {
+  try {
+    const { name, symbol, marketCap, volume, liquidity, ath, atl, address } = data;
+
+    const message = `🎉 *New Meme Coin Detected on PumpPortal!*\n\n` +
+      `🪙 *Name*: ${name}\n` +
+      `💠 *Ticker*: ${symbol}\n` +
+      `💵 *Market Cap*: $${marketCap}\n` +
+      `📊 *Volume*: $${volume}\n` +
+      `💧 *Liquidity*: $${liquidity}\n` +
+      `🏔️ *All-Time High*: $${ath}\n` +
+      `🏔️ *All-Time Low*: $${atl}\n\n` +
+      `🔗 *Contract Address*: \`${address}\`\n` +
+      `📜 [View on PumpPortal](https://pumpportal.fun/token/${address})\n` +
+      `📥 Copy and purchase now!`;
+
+    await sendTelegramNotification(message);
+  } catch (error) {
+    console.error("Error processing new token data:", error);
+  }
+}
+
 // Setup WebSocket connection
 function setupWebSocket() {
   const ws = new WebSocket(WEBSOCKET_URL);
@@ -48,23 +71,7 @@ function setupWebSocket() {
 
       // Check for new token events
       if (event.method === "newToken" && event.data) {
-        const token = event.data;
-        const { name, symbol, marketCap, volume, liquidity, ath, atl, address } = token;
-
-        const message = `🎉 *New Meme Coin Detected on PumpPortal!*\n\n` +
-          `🪙 *Name*: ${name}\n` +
-          `💠 *Ticker*: ${symbol}\n` +
-          `💵 *Market Cap*: $${marketCap}\n` +
-          `📊 *Volume*: $${volume}\n` +
-          `💧 *Liquidity*: $${liquidity}\n` +
-          `🏔️ *All-Time High*: $${ath}\n` +
-          `🏔️ *All-Time Low*: $${atl}\n\n` +
-          `🔗 *Contract Address*: \`${address}\`\n` +
-          `📜 [View on PumpPortal](https://pumpportal.fun/token/${address})\n` +
-          `📥 Don't miss out!`;
-
-        // Send Telegram notification
-        await sendTelegramNotification(message);
+        await processNewToken(event.data);
       }
     } catch (error) {
       console.error("Error processing WebSocket message:", error);
